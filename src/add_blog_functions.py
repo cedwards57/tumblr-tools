@@ -11,12 +11,12 @@ consumer_secret = os.getenv("CONSUMER_SECRET")
 def get_approval():
     '''Generates the URL and initial tokens to authorize the app to access your blog.'''
     t = Tumblpy(consumer_key, consumer_secret)
-    auth_props = t.get_authentication_tokens(callback_url='http://localhost:8080/callback')
+    auth_props = t.get_authentication_tokens(callback_url='http://localhost:8080/')
     auth_url = auth_props['auth_url']
     print('Connect with Tumblr via: %s' % auth_url)
     oauth_token = auth_props["oauth_token"]
     oauth_token_secret = auth_props['oauth_token_secret']
-    return oauth_token, oauth_token_secret
+    return oauth_token, oauth_token_secret, auth_url
 
 def verify(oauth_token, oauth_token_secret, oauth_verifier):
     '''After the app has been authorized, this saves the finalized OAuth tokens which allow ongoing API usage with read/write access.'''
