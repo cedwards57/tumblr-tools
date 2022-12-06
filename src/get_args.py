@@ -129,5 +129,33 @@ def get_args():
         help="if viewing tags of a post by a sideblog, or someone else's blog, specify url"
     )
 
+    sub_follow = subparsers.add_parser('follow')
+    sub_follow.add_argument(
+        dest="blog",
+        action="store",
+        metavar="blog-username",
+        help="specify your main authenticated blog's username"
+    )
+    sub_follow.add_argument(
+        dest="url_list",
+        action="store",
+        metavar="\"tag 1,tag 2,tag 3\"",
+        help="the blogs to follow"
+    )
+
+    sub_follow = subparsers.add_parser('unfollow')
+    sub_follow.add_argument(
+        dest="blog",
+        action="store",
+        metavar="blog-username",
+        help="specify your main authenticated blog's username"
+    )
+    sub_follow.add_argument(
+        dest="url_list",
+        action="store",
+        metavar="\"tag 1,tag 2,tag 3\"",
+        help="the blogs to unfollow"
+    )
+
     args = parser.parse_args()
     return args

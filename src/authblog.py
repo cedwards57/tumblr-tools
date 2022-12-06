@@ -23,7 +23,7 @@ class AuthBlog():
     
     def follow(self, urls):
         '''Accepts a single string or a list of blog names to follow.'''
-        following = self.get_following()
+        # following = self.get_following()
         if isinstance(urls,str):
             self.t.post('user/follow', params={"url": f"{urls}.tumblr.com"})
             return f"Followed {urls}."
@@ -33,6 +33,19 @@ class AuthBlog():
             except TumblpyError:
                 print(f"Could not follow {url}")
         return f"Followed up to {len(urls)} blogs."
+    
+    def unfollow(self, urls):
+        '''Accepts a single string or a list of blog names to follow.'''
+        # following = self.get_following()
+        if isinstance(urls,str):
+            self.t.post('user/unfollow', params={"url": f"{urls}.tumblr.com"})
+            return f"Unfollowed {urls}."
+        for url in urls:
+            try:
+                self.t.post('user/unfollow', params={"url": f"{url}.tumblr.com"})
+            except TumblpyError:
+                print(f"Could not unfollow {url}")
+        return f"Unfollowed up to {len(urls)} blogs."
     
     def last_response(self, post_id, partner=None):
         '''Returns the user and time of the last post in an RP thread.'''
@@ -80,7 +93,8 @@ class AuthBlog():
             ic_tag = None
         
         start_date = int(datetime(year,month,1,0,0,0, tzinfo=tz.gettz(time_zone)).timestamp())
-        end_date = int(datetime(year,month+1,1,0,0,0, tzinfo=tz.gettz(time_zone)).timestamp())
+        month_next = (1 if month == 12 else month + 1)
+        end_date = int(datetime(year,month_next,1,0,0,0, tzinfo=tz.gettz(time_zone)).timestamp())
         response = self.t.get("posts", blog_url=self.url, params={
             "before": end_date,
             "tag": ic_tag,
@@ -208,6 +222,6 @@ class AuthBlog():
                         tags[n_id] = n_tags
                         urls[n_id] = n_url
                 if note['timestamp'] < time_marker: time_marker = note['timestamp']
-            if note['timestamp'] < (op_timestamp + 5): break # some leeway given to timestamp comparison as it sometimes doesn't perfectly match the listed OP timestamp
+            if note['timestamp'] < (op_timestamp + 5): break # 5 second leeway given to timestamp comparison as it sometimes doesn't perfectly match the listed OP timestamp
         return tags, urls
 

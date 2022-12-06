@@ -24,6 +24,16 @@ def get_reblog_tags(args):
     for id in tags.keys():
         print(f'{urls[id]}: {tags[id]}')
 
+def follow(args):
+    blog = AuthBlog(args.blog)
+    urls = args.url_list.split(",")
+    blog.follow(urls)
+
+def unfollow(args):
+    blog = AuthBlog(args.blog)
+    urls = args.url_list.split(",")
+    blog.unfollow(urls)
+
 if __name__ == '__main__':
     args = get_args()
     if args.cmd == 'get-activity':
@@ -34,5 +44,9 @@ if __name__ == '__main__':
         replace_tag(args)
     if args.cmd == 'get-reblog-tags':
         get_reblog_tags(args)
+    if args.cmd == 'follow':
+        follow(args)
+    if args.cmd == 'unfollow':
+        unfollow(args)
     
     
