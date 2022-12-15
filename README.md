@@ -1,7 +1,7 @@
 ## Getting Started
 
 ```
-git clone https://github.com/cedwards57/tumblr-tools
+git clone https://github.com/thestarjar/tumblr-app
 cd tumblr-app
 pip install -r requirements.txt
 ```

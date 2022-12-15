@@ -1,5 +1,6 @@
 Flask
 python-dotenv
-python-tumblpy
+authlib
 argparse
 python-dateutil
+requests

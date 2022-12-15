@@ -48,5 +48,3 @@ if __name__ == '__main__':
         follow(args)
     if args.cmd == 'unfollow':
         unfollow(args)
-    
-    
