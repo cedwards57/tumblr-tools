@@ -24,13 +24,13 @@ Additionally, if you want to use this app locally out-of-box, you'll want to set
 Now that you've set up, you can go about authorizing your specific blogs:
 
 1. Log in to your tumblr account.
-2. run `python3 addblog.py`
+2. run `python addblog.py`
 3. A link to a tumblr authentication screen should automatically open in your browser.
 4. Click "Allow".
 5. You're done! Your authorization keys have been logged, and you can read/write to blogs on that account. If you have multiple accounts, you can repeat these steps for each one to be authorized for all of them.
 
 ### Using This App
-Run `python3 -m t -h` from the root directory to view available commands. Use `python3 -m t <command> -h` to view usage of a given command.
+Run `python -m t -h` from the root directory to view available commands. Use `python -m t <command> -h` to view usage of a given command.
 
 
 ## Documentation
