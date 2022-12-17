@@ -1,7 +1,6 @@
 import os
 from dotenv import find_dotenv, load_dotenv
 load_dotenv(find_dotenv())
-from src.t_requester import TAuthorizer
 from src.t_requester import TRequester
 from datetime import datetime, timezone
 from dateutil import tz
@@ -9,7 +8,8 @@ import json
 from math import ceil
 import time
 
-class AuthBlog():
+
+class Blog():
     def __init__(self, blog_url):
         '''Class which stores the URL and authorization of a given blog.'''
         self.url = blog_url
@@ -17,7 +17,10 @@ class AuthBlog():
         consumer_secret = os.getenv("CONSUMER_SECRET")
         access_token = os.getenv(f"{self.url.upper()}_ACCESS_TOKEN")
         refresh_token = os.getenv(f"{self.url.upper()}_REFRESH_TOKEN")
-        self.t = TRequester(consumer_key, consumer_secret, access_token, refresh_token, blog_url)
+        expires = (int(os.getenv(f"{self.url.upper()}_EXPIRES"))  if os.getenv(f"{self.url.upper()}_EXPIRES") is not None else 0)
+        if access_token is None or refresh_token is None:
+            raise Exception('You are missing a {USERNAME}_ACCESS_TOKEN or {USERNAME}_REFRESH_TOKEN for this blog in your .env file.')
+        self.t = TRequester(consumer_key, consumer_secret, access_token, refresh_token, blog_url, expires=expires)
     
     def follow(self, urls):
         '''Accepts a single string or a list of blog names to follow.'''
@@ -67,7 +70,7 @@ class AuthBlog():
         month=None,
         year=None,
         min_activity=2,
-        tags_file="tags.json",
+        ic_tag=None,
         blog_url=None,
         time_zone='EST'
     ):
@@ -77,20 +80,11 @@ class AuthBlog():
         if not year: year = int(datetime.now().strftime('%Y'))
         if not min_activity: min_activity = 2
 
-        if tags_file.lower() != 'none':
-            root_dir = os.path.dirname(os.path.abspath(__file__))
-            json_file = os.path.join(root_dir, "../json", tags_file)
-            tags = json.load(open(json_file, "r"))
-            if self.url in tags:
-                ic_tag = tags[self.url]["ic"]
-            else:
-                ic_tag = "ic"
-        else:
-            ic_tag = None
-        
-        start_date = int(datetime(year,month,1,0,0,0, tzinfo=tz.gettz(time_zone)).timestamp())
         month_next = (1 if month == 12 else month + 1)
-        end_date = int(datetime(year,month_next,1,0,0,0, tzinfo=tz.gettz(time_zone)).timestamp())
+        year_next = (year if month_next != 1 else year + 1)
+
+        start_date = int(datetime(year,month,1,0,0,0, tzinfo=tz.gettz(time_zone)).timestamp())
+        end_date = int(datetime(year_next,month_next,1,0,0,0, tzinfo=tz.gettz(time_zone)).timestamp())
         response = self.t.get("/posts", blog_url=self.url, params={
             "before": end_date,
             "tag": ic_tag,
@@ -179,7 +173,7 @@ class AuthBlog():
             })
     
     def get_tagged(self, tag_list, blog_url=None):
-        '''Returns a list of IDs of posts that each have all the listed tags.'''
+        '''Returns a set of IDs of posts that each have all the listed tags.'''
         if not blog_url: blog_url = self.url
         if isinstance(tag_list, str):
             tag_list = [tag_list]
@@ -223,6 +217,6 @@ class AuthBlog():
     
     def save_avatar(self, location='./avatar.jpg', blog_url=None, dims=64):
         if not blog_url: blog_url = self.url
-        img = self.t.get('/avatar', blog_url=blog_url, extra_path_param=128)
-        with open('response.jpg', 'wb') as f:
+        img = self.t.get('/avatar', blog_url=blog_url, extra_path_param=dims)
+        with open(location, 'wb') as f:
             f.write(img)

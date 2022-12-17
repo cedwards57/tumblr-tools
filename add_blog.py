@@ -2,7 +2,6 @@ import os
 from dotenv import find_dotenv, load_dotenv
 import webbrowser
 import flask
-# from src.add_blog_functions import get_approval, verify, get_auth_url, get_token
 from src.t_requester import TAuthorizer
 
 def flask_app():
@@ -12,13 +11,8 @@ def flask_app():
     a = TAuthorizer()
     webbrowser.open(a.get_authorize_url())
 
-    
-
     @app.route("/")
     def index():
-        # args = flask.request.args
-        # oauth_verifier = args.get("oauth_verifier")
-        # verify(oauth_token, oauth_token_secret, oauth_verifier)
         return "This page is blank."
     
     @app.route("/callback")
@@ -26,10 +20,7 @@ def flask_app():
         args = flask.request.args
         code = args.get('code')
         state = args.get('state')
-        # print(code, state)
-        a.get_token(code,state)
-        # oauth_verifier = args.get("oauth_verifier")
-        # verify(oauth_token, oauth_token_secret, oauth_verifier)
+        a.get_tokens(code,state)
         return "Done. Close this window and hit CTRL+C in the terminal!"
         
     return app

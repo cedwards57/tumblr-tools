@@ -6,42 +6,40 @@ import requests
 import random
 import string
 import json
-from requests_oauthlib import OAuth1
 from authlib.integrations.requests_client import OAuth1Auth
 from urllib.parse import parse_qs, urlencode
 from src.t_error import TumblrError
+import time
 
-consumer_key = os.getenv("CONSUMER_KEY")
-consumer_secret = os.getenv("CONSUMER_SECRET")
 
 class TAuthorizer():
     '''OAuth2 authentication for Tumblr API v2'''
     def __init__(self):
-        self.consumer_key = consumer_key
-        self.consumer_secret = consumer_secret
+        self.consumer_key = os.getenv("CONSUMER_KEY")
+        self.consumer_secret = os.getenv("CONSUMER_SECRET")
         self.url = 'https://www.tumblr.com'
         self.auth2_url_base = 'https://www.tumblr.com/oauth2'
         self.headers = {'Authorization': 'Bearer ' + self.consumer_key}
+        self.state = ''
     
     def get_authorize_url(self):
         scope = 'basic%20write%20offline_access'
-        state = ''.join(random.choices(string.ascii_uppercase, k=15))
-        # redir = 'http://localhost:8080/re'
-        url = f'{self.auth2_url_base}/authorize?client_id={self.consumer_key}&response_type=code&scope={scope}&state={state}'
+        self.state = ''.join(random.choices(string.ascii_uppercase, k=15))
+        url = f'{self.auth2_url_base}/authorize?client_id={self.consumer_key}&response_type=code&scope={scope}&state={self.state}'
         return url
     
-    def get_token(self, code, state):
+    def get_tokens(self, code, state):
+        if self.state != state: raise Exception('State value does not match.')
         url = 'https://api.tumblr.com/v2/oauth2/token'
         response = requests.post(url, data={
             'grant_type': 'authorization_code',
             'code': code,
-            'client_id': consumer_key,
-            'client_secret': consumer_secret
+            'client_id': self.consumer_key,
+            'client_secret': self.consumer_secret
         })
         self.access_token = response.json()['access_token']
         self.refresh_token = response.json()['refresh_token']
-        # blog_url = (t.get("/user/info"))['user']['blogs'][0]['url']
-        # blog_url = urlparse(url).netloc.split('.')[0]
+        expires = response.json()['expires_in']
 
         blog_url = requests.get(
             'https://api.tumblr.com/v2/user/info',
@@ -51,21 +49,21 @@ class TAuthorizer():
                 'Content-Type': 'application/json'
                 })
         blog_url = blog_url.json()['response']['user']['name']
-
         set_key(env_file, f"{blog_url.upper()}_ACCESS_TOKEN", self.access_token)
         set_key(env_file, f"{blog_url.upper()}_REFRESH_TOKEN", self.refresh_token)
+        set_key(env_file, f"{blog_url.upper()}_EXPIRES", str(expires + int(time.time()) - 10))
     
     def _check_response(self, response):
         if response.status_code != 200 and response.status_code != 201:
             raise TumblrError(response)
 
 
-
 class TRequester():
-    '''Request wrapper for Tumblr API v2'''
-    def __init__(self, consumer_key, consumer_secret, access_token, refresh_token, blog_url):
+    '''Request wrapper for Tumblr API v2 with OAuth2'''
+    def __init__(self, consumer_key, consumer_secret, access_token, refresh_token, blog_url, expires=0):
         self.consumer_key = consumer_key
         self.consumer_secret = consumer_secret
+        self.expires = expires
         self.headers = {
             'User-Agent': 'Perikit',
             # 'Content-Type': 'application/json',
@@ -77,6 +75,7 @@ class TRequester():
         self.base_url = 'https://api.tumblr.com/v2'
     
     def request(self, endpoint, method='GET', blog_url=None, params=None, extra_path_param=None):
+        if self.expires < time.time(): self.refresh_tokens()
         base_url = self.base_url
         params.update(self.params)
         if blog_url is not None:
@@ -114,14 +113,13 @@ class TRequester():
             raise Exception('Tried and failed to refresh OAuth2 token.')
         self.headers['Authorization'] = f'Bearer {response.json()["access_token"]}'
         self.refresh_token = response.json()['refresh_token']
+        self.expires = response.json()['expires_in'] + int(time.time()) - 10
 
         set_key(env_file, f"{self.blog_url.upper()}_ACCESS_TOKEN", response.json()['access_token'])
         set_key(env_file, f"{self.blog_url.upper()}_REFRESH_TOKEN", self.refresh_token)
+        set_key(env_file, f"{self.blog_url.upper()}_EXPIRES", str(response.json()['expires_in'] + int(time.time()) - 10))
     
     def _check_response(self, response):
         if response.status_code != 200 and response.status_code != 201:
-            if response.status_code == 401:
-                self.refresh_tokens()
-            else:
-                raise TumblrError(response)
+            raise TumblrError(response)
             

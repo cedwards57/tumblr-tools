@@ -40,13 +40,13 @@ def get_args():
     )
     sub_get_activity.add_argument(
         "-t",
-        "--tags-file",
-        dest="tags_file",
-        default='tags.json',
+        "--tag",
+        dest="ic_tag",
+        default='ic',
         action="store",
         metavar="tags-file",
         type=str,
-        help="Name of a file in the directory /json which specifies IC tags for each blog. Default 'tags.json'. Specify 'none' to check all posts."
+        help="The tag to check for activity. Default 'ic'. Specify 'none' to check all posts."
     )
 
     sub_get_tagged = subparsers.add_parser('get-tagged')
@@ -139,7 +139,7 @@ def get_args():
     sub_follow.add_argument(
         dest="url_list",
         action="store",
-        metavar="\"tag 1,tag 2,tag 3\"",
+        metavar="\"blog 1,blog 2,blog 3\"",
         help="the blogs to follow"
     )
 
@@ -153,7 +153,7 @@ def get_args():
     sub_follow.add_argument(
         dest="url_list",
         action="store",
-        metavar="\"tag 1,tag 2,tag 3\"",
+        metavar="\"blog 1,blog 2,blog 3\"",
         help="the blogs to unfollow"
     )
 
